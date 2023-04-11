@@ -9,9 +9,24 @@ import NavBar from './components/NavBar/NavBar'
 import Card from './components/Card/Card'
 import Expandable from './components/Expendable/Expandable'
 import Form from './components/Form/Form'
+import { ExpenseList } from './expense-tracker/components/ExpenseList'
+import { ExpenseFilter } from './expense-tracker/components/ExpenseFilter'
+import { ExpenseForm } from './expense-tracker/components/ExpenseForm'
+import categories from './expense-tracker/categories.ts'
 
 
 function App() {
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [expenses, setExpenses] = useState([
+    { id: 1, description: 'aaa', amount: 110, category: 'Utilities' },
+    { id: 2, description: 'bba4', amount: 120, category: 'Groceries' },
+    { id: 3, description: 'aaa3', amount: 201, category: 'Entertainment' },
+    { id: 4, description: 'aaa2', amount: 30, category: 'Utilities' },
+    { id: 5, description: 'aaa1', amount: 40, category: 'Utilities' },
+
+  ])
+
+  const visibleExpense = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses
 
   //UPDATING WITH Immer
 
@@ -52,7 +67,7 @@ function App() {
 
   return (
     <div>
-      <Form />
+      {/* <Form /> */}
       {/* <ListGroup items={items} heading="Cities" onSelectItem={handleSelectItem} />
       <div>
         {alertVisible && <Alert onClose={() => setAlertVisible(false)}> My Alert</Alert>}
@@ -75,9 +90,17 @@ function App() {
         </Expandable>
       </div> */}
 
+      <div className="mb-5">
+        <ExpenseForm onSubmit={expense => setExpenses([...expenses, { ...expense, id: expenses.length + 1 }])} />
+      </div>
 
 
-    </div>
+      <div className="mb-3">
+
+        <ExpenseFilter onSelectCategory={(category) => setSelectedCategory(category)} />
+      </div>
+      <ExpenseList expenses={visibleExpense} onDelete={(id) => setExpenses(expenses.filter(e => e.id !== id))} />
+    </div >
 
   )
 }
