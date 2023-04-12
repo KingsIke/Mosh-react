@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 // import reactLogo from './assets/react.svg'
 import './App.css'
 import Alert from './components/Alert'
@@ -12,21 +12,65 @@ import Form from './components/Form/Form'
 import { ExpenseList } from './expense-tracker/components/ExpenseList'
 import { ExpenseFilter } from './expense-tracker/components/ExpenseFilter'
 import { ExpenseForm } from './expense-tracker/components/ExpenseForm'
-import categories from './expense-tracker/categories.ts'
+// import categories from './expense-tracker/categories.ts'
+import { ProductList } from './components/ProductList/ProductList'
+import axios, { AxiosError, CanceledError } from 'axios';
 
+
+// interface User {
+//   name: string; 
+//   id: number;
+// }
+
+interface User {
+  name: string;
+  id: number;
+  email: string
+}
 
 function App() {
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [expenses, setExpenses] = useState([
-    { id: 1, description: 'aaa', amount: 110, category: 'Utilities' },
-    { id: 2, description: 'bba4', amount: 120, category: 'Groceries' },
-    { id: 3, description: 'aaa3', amount: 201, category: 'Entertainment' },
-    { id: 4, description: 'aaa2', amount: 30, category: 'Utilities' },
-    { id: 5, description: 'aaa1', amount: 40, category: 'Utilities' },
 
-  ])
+  const [users, setUsers] = useState<User[]>([])
+  const [error, setError] = useState('')
 
-  const visibleExpense = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses
+  useEffect(() => {
+    const controller = new AbortController()
+
+
+    // axios.get<User[]>('https://jsonplaceholder.typicode.com/users', {signal: controller.signal}).then((res) => setUsers(res.data)).catch((err) => setError(err.message))
+
+    const get = async () => {
+      try {
+
+        const res = await axios.get<User[]>('https://jsonplaceholder.typicode.com/users', { signal: controller.signal })
+        setUsers(res.data)
+
+      } catch (error: any) {
+        // console.log(error)
+        if (error instanceof CanceledError) return;
+        setError((error as AxiosError).message)
+      }
+    }
+    get()
+    return () => controller.abort();
+
+  }, [])
+
+  // const [category, setCategory] = useState('') FOR uSEeffect
+
+  // Expenses ........
+
+  // const [selectedCategory, setSelectedCategory] = useState('')
+  // const [expenses, setExpenses] = useState([
+  //   { id: 1, description: 'aaa', amount: 110, category: 'Utilities' },
+  //   { id: 2, description: 'bba4', amount: 120, category: 'Groceries' },
+  //   { id: 3, description: 'aaa3', amount: 201, category: 'Entertainment' },
+  //   { id: 4, description: 'aaa2', amount: 30, category: 'Utilities' },
+  //   { id: 5, description: 'aaa1', amount: 40, category: 'Utilities' },
+
+  // ])
+
+  // const visibleExpense = selectedCategory ? expenses.filter(e => e.category === selectedCategory) : expenses
 
   //UPDATING WITH Immer
 
@@ -90,7 +134,9 @@ function App() {
         </Expandable>
       </div> */}
 
-      <div className="mb-5">
+
+
+      {/* <div className="mb-5">
         <ExpenseForm onSubmit={expense => setExpenses([...expenses, { ...expense, id: expenses.length + 1 }])} />
       </div>
 
@@ -99,7 +145,43 @@ function App() {
 
         <ExpenseFilter onSelectCategory={(category) => setSelectedCategory(category)} />
       </div>
-      <ExpenseList expenses={visibleExpense} onDelete={(id) => setExpenses(expenses.filter(e => e.id !== id))} />
+      <ExpenseList expenses={visibleExpense} onDelete={(id) => setExpenses(expenses.filter(e => e.id !== id))} /> */}
+
+
+      {/* // For PRODUCTLIST (USEEFFECT) //  */}
+      {/* <div>
+        <select className="form-select" onChange={(e) => setCategory(e.target.value)}>
+          <option value=""></option>
+          <option value="Clothing">Clothing</option>
+          <option value="HouseHold">HouseHold</option>
+        </select>
+        <ProductList category={category} />
+      </div> */}
+
+
+      {/* <ul>
+        {users.map((user) => {
+          return (
+            <>
+              <li key={user.id}>{user.name}, &nbsp; {user.email}</li>
+
+            </>
+          )
+        })}
+      </ul> */}
+
+      {error && <p className='text-danger'>{error}</p>}
+      <ul>
+        {users.map((user) => {
+          return (
+            <li key={user.id}>
+              {user.name}, &nbsp; {user.email}
+            </li>
+          )
+        })}
+      </ul>
+
+
     </div >
 
   )
