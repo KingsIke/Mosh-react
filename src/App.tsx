@@ -14,9 +14,9 @@ import { ExpenseFilter } from './expense-tracker/components/ExpenseFilter'
 import { ExpenseForm } from './expense-tracker/components/ExpenseForm'
 // import categories from './expense-tracker/categories.ts'
 import { ProductList } from './components/ProductList/ProductList'
-import axios, { AxiosError, CanceledError } from 'axios';
-
-
+// import { AxiosError, CanceledError } from 'axios';
+import LoadingIcon from './components/LoadingIcon'
+import apiClient, { AxiosError, CanceledError } from './services/api-client'
 // interface User {
 //   name: string; 
 //   id: number;
@@ -32,29 +32,82 @@ function App() {
 
   const [users, setUsers] = useState<User[]>([])
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
 
-
-    // axios.get<User[]>('https://jsonplaceholder.typicode.com/users', {signal: controller.signal}).then((res) => setUsers(res.data)).catch((err) => setError(err.message))
+    setIsLoading(true)
+    // axios.get<User[]>('https://jsonplaceholder.typicode.com/users', {signal: controller.signal}).then((res) => setUsers(res.data)).catch((err) => {if(err instanceof CanceledError)return;  setError(err.message)}) return ()=> controller.abort()
 
     const get = async () => {
       try {
 
-        const res = await axios.get<User[]>('https://jsonplaceholder.typicode.com/users', { signal: controller.signal })
+        const res = await apiClient.get<User[]>('/users', { signal: controller.signal })
+        console.log(res)
+
         setUsers(res.data)
+        setIsLoading(false)
 
       } catch (error: any) {
         // console.log(error)
+
         if (error instanceof CanceledError) return;
-        setError((error as AxiosError).message)
+        setError((error as AxiosError).message);
+        setIsLoading(false)
       }
     }
     get()
     return () => controller.abort();
 
   }, [])
+
+
+  const addUser = async (user: User) => {
+    const originalUsers = [...users]
+    const newUser = { id: 0, name: 'Kings', email: 'Ogbonnaya' };
+    setUsers([...users, newUser])
+    try {
+      const res = await apiClient.post('/users', newUser)
+      setUsers([res.data, ...users])
+    } catch (error) {
+      setError((error as AxiosError).message)
+      setUsers(originalUsers)
+    }
+
+  }
+
+  const updateUser = async (user: User) => {
+    const originalUsers = [...users]
+
+    const updatedUser = { ...user, name: user.name, email: user.email + '!' };
+    setUsers(users.map(u => u.id === user.id ? updatedUser : u))
+
+    try {
+      const res = await apiClient.patch(`/users/${user.id}`, updatedUser);
+
+      // setUsers([res.data, ...users])
+    } catch (error) {
+      setError((error as AxiosError).message)
+      setUsers(originalUsers)
+    }
+  }
+
+  const deleteUser = async (user: User) => {
+    const originalUsers = [...users]
+    setUsers(users.filter(u => u.id !== user.id))
+    // axios.delete('https://jsonplaceholder.typicode.com/umsers' + user.id)
+    //   .catch(err => {
+    //     setError((err as AxiosError).message);
+    //     setUsers(originalUsers)
+    //   })
+    try {
+      await apiClient.delete(`/users/${user.id}`)
+    } catch (err) {
+      setError((err as AxiosError).message)
+      setUsers(originalUsers)
+    }
+  }
 
   // const [category, setCategory] = useState('') FOR uSEeffect
 
@@ -110,7 +163,7 @@ function App() {
   // const [alertVisible, setAlertVisible] = useState(false)
 
   return (
-    <div>
+    <>
       {/* <Form /> */}
       {/* <ListGroup items={items} heading="Cities" onSelectItem={handleSelectItem} />
       <div>
@@ -171,18 +224,25 @@ function App() {
       </ul> */}
 
       {error && <p className='text-danger'>{error}</p>}
-      <ul>
+      {isLoading && <LoadingIcon type={'spinningBubbles'} color={'blue'} />}
+      <button className="btn btn-primary mb-3" onClick={() => addUser}>Add</button>
+      <ul className='list-group'>
         {users.map((user) => {
           return (
-            <li key={user.id}>
-              {user.name}, &nbsp; {user.email}
+            <li key={user.id} className='list-group-item d-flex justify-content-between'>
+              Name: {user.name}, &nbsp; email: {user.email}
+              <div className=''>
+                <button className="btn btn-outline-secondary mx-1" onClick={() => updateUser(user)} >Update</button>
+                <button className="btn btn-outline-danger" onClick={() => deleteUser(user)}>Delete</button>
+
+              </div>
             </li>
           )
         })}
       </ul>
 
 
-    </div >
+    </>
 
   )
 }
