@@ -17,10 +17,7 @@ import { ProductList } from './components/ProductList/ProductList'
 // import { AxiosError, CanceledError } from 'axios';
 import LoadingIcon from './components/LoadingIcon'
 import apiClient, { AxiosError, CanceledError } from './services/api-client'
-// interface User {
-//   name: string; 
-//   id: number;
-// }
+
 
 interface User {
   name: string;
